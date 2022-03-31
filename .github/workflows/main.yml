@@ -1,0 +1,50 @@
+name: CI-Rsync
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events for all branches
+  push:
+    branches: "**"
+
+  schedule:
+    - cron: "0 */24 * * *"
+
+  #  pull_request:
+  #    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "Rsync"
+  deploy-via-rsync:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Rsync Deployment
+        uses: burnett01/rsync-deployments@5.2
+        with:
+          switches: -avzr --delete --exclude="db.sqlite3"
+          path: ./*
+          remote_path: /home/admin/django_project/
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_port: ${{ secrets.SSH_PORT }}
+          remote_user: ${{ secrets.SSH_USERNAME }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+  post-checks:
+    needs: deploy-via-rsync
+    name: post-checks-deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: sudo chmod 777 /home/admin/django_project/

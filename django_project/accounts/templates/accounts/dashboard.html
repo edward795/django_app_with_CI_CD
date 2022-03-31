@@ -1,0 +1,112 @@
+{% extends 'home/main.html' %}
+{% load static %}
+
+
+{% block content %}
+
+
+<div class="user-dash">
+  <div class="container">
+
+    <div class="container-apply">
+      
+    
+        <h5>Welcome to your personalised dashboard!</h5>
+        <hr>
+     <img src="{% static 'images/avatar2.png' %}" width="100px" height="100px;" style="border-radius:50%;"> <br></br>
+      <span class="badge bg-secondary">{{user.first_name}} {{user.last_name}}</span>
+      <span class="badge bg-secondary">{{user.email}}</span>
+      <span class="badge bg-secondary">{{user.username}}</span>
+       <hr>
+   </div>
+       <div class="container-apply">
+ 
+      <button type="button" class="btn btn-primary mb-3 ">
+            Applied Jobs <span class="badge bg-secondary">{{no_of_jobs}}</span>
+          </button>
+        </div>
+     
+      
+  <hr style="color:black;">
+  
+
+  <div class="row">
+    {% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+          <div class="alert alert-danger"> 
+            {{ message }}
+          </div>
+        {% elif message.tags == 'success' %}
+          <div class="alert alert-dark"> 
+            {{ message }}
+          </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+  {% if jobs is not None %}
+      {% for job in jobs %}
+
+
+      <div class="flip-card">
+        <div class="flip-card-inner">
+          <div class="flip-card-front" style="border-radius:5px;">
+            {% if job.isVerified %}
+                <img src="{% static 'images/verified.jpg' %}" width="60px" height="80px"/>
+            {% endif %}
+                <br></br><br></br>
+                <h5>Vacancy:{{job.jobname}}</h5> 
+                <p>Job type:{{job.jobtypes}}</p> 
+                {% if job.job_closed %}
+                <span class="badge bg-danger">closed</span><span class="badge rounded-pill bg-dark">{{ job.open_date | date:"d-m-Y" }} - {{ job.close_date | date:"d-m-Y" }}</span><br></br>
+                {% else %}
+                <span class="badge bg-success">open</span><span class="badge rounded-pill bg-dark">{{ job.open_date | date:"d-m-Y" }} - {{ job.close_date | date:"d-m-Y" }}</span><br></br>
+                {% endif %}
+                <button class="btn btn-warning">Salary:{{job.salary}}</button>
+              </div>
+          <div class="flip-card-back" style="border-radius:5px;">
+            <br>
+            <span class="badge bg-dark">Skills</span>
+            <span class="badge bg-secondary">{{job.skills}}</span>
+            <br></br>
+            <button type="button" class="btn btn-bg-light bg-info text-dark">
+              Vacancies <span class="badge bg-secondary">{{job.no_of_vacancies}}</span>
+            </button>
+              <br></br>
+               {% if job.id in applied_list %}
+                   <button type="submit" class="btn btn-success disabled">Already Applied!</button>
+               {% else %}
+                 <form action="applied/{{job.id}}" method="post">
+                   {% csrf_token %}
+                   <input type="hidden" value="{{user.first_name}} {{user.last_name}}" name="name">
+                   <input type="hidden" value="{{user.email}}" name="email">
+                   {% if job.job_closed %}
+                   <button type="submit" class="btn btn-danger disabled">Applications Closed!</button>
+                   {% else %}
+                   <button type="submit" class="btn btn-secondary">Apply Now!</button>
+                   {% endif %}
+                 </form>
+               {% endif %}
+
+           </div>
+           </div>
+          </div>
+
+      {% endfor %}
+
+    </div>
+    
+  {% else %}
+
+  <h4>Nothing in your dashboard!</h4>
+  <div class="alert alert-danger">Your Dashboard is Empty! </div>
+  
+  {% endif %}
+
+  
+</div>
+</div>
+
+
+{% endblock %}
